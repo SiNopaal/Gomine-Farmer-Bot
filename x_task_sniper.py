@@ -789,7 +789,7 @@ async def auto_join_telegram(phone: str, target_url: str) -> bool:
 
 async def execute_task_for_acc(idx: int, acc: dict, task: dict, r_data: dict, get_ts):
     if idx > 0:
-        await asyncio.sleep(1.8 * idx)  # Jeda tertib dan tenang antar akun
+        await asyncio.sleep(random.uniform(2.5, 4.2) * idx)  # Jeda tertib manusiawi antar akun
 
     tid = task.get("id")
     ttype = task.get("type")
@@ -901,8 +901,8 @@ async def execute_task_for_acc(idx: int, acc: dict, task: dict, r_data: dict, ge
             print(f"[{get_ts()}] [{cfg['tag']}] ℹ️  #{tid} (aksi tertunda [{failed_retries[tid]}/3], akan dicoba kembali)")
         return
 
-    # Tunggu 9.0 detik agar Twitter/Telegram API mengindeks aksi secara tuntas
-    await asyncio.sleep(9.0)
+    # Tunggu jeda alami 9.0 - 13.5 detik agar Twitter API mengindeks aksi secara tuntas
+    await asyncio.sleep(random.uniform(9.0, 13.5))
     v_res = await asyncio.to_thread(api.verify_task, tid, {"platform": "android"})
 
     # Auto-retry verifikasi bertahap jika ada jeda indeks di Twitter API (tunggu ekstra 8s - 12s)
@@ -915,6 +915,12 @@ async def execute_task_for_acc(idx: int, acc: dict, task: dict, r_data: dict, ge
 
     if v_res["ok"] and v_res.get("data", {}).get("verified"):
         awarded = v_res["data"].get("points_awarded", pts)
+        now_act = time.time()
+        acc["last_action_time"] = now_act
+        if str(ttype).lower() in ["comment_twitter", "reply_x", "comment", "quote"]:
+            acc["last_comment_time"] = now_act
+        acc.setdefault("recent_actions", []).append({"time": now_act, "type": str(ttype).lower(), "id": tid})
+
         p_up = await asyncio.to_thread(api.get_user_profile)
         if p_up.get("ok"):
             acc["current_points"] = p_up["data"].get("points", acc["current_points"] + awarded)
@@ -1026,7 +1032,12 @@ async def run_sniper():
                     "current_points": cur_pts,
                     "token_age": time.time(),
                     "failed_retries": {},
-                    "cooldown_until": active_cds.get(phone, 0)
+                    "cooldown_until": active_cds.get(phone, 0),
+                    "recent_actions": [],
+                    "last_action_time": 0,
+                    "last_comment_time": 0,
+                    "hourly_action_cap": 18,
+                    "hourly_repost_cap": 8
                 })
             else:
                 print(f"    ❌ Gagal ambil profil {phone}: {prof_res}")
@@ -1142,13 +1153,40 @@ async def run_sniper():
             title = task.get("title")
             pts = task.get("points_value") or 0
 
-            # Cari akun yang belum mengerjakan task ini dan tidak sedang dalam masa cooldown
-            eligible_accs = [
-                acc for acc in accounts_state 
-                if str(tid) not in acc["completed"] 
-                and time.time() >= acc.get("cooldown_until", 0)
-                and not (str(ttype).lower() in ["retweet", "repost"] and time.time() < acc.get("repost_cooldown_until", 0))
-            ]
+            # 🛡️ FILTER AKUN DENGAN PROTOKOL MAIN AMAN:
+            now = time.time()
+            eligible_accs = []
+            for acc in accounts_state:
+                if str(tid) in acc["completed"]:
+                    continue
+                if now < acc.get("cooldown_until", 0):
+                    continue
+
+                # Bersihkan riwayat aksi yang lebih lama dari 1 jam (sliding window 60 menit)
+                acc["recent_actions"] = [a for a in acc.get("recent_actions", []) if now - a["time"] < 3600]
+
+                # 1. Batas maksimal aksi total per jam (Maks 18 aksi/jam)
+                if len(acc["recent_actions"]) >= acc.get("hourly_action_cap", 18):
+                    acc["cooldown_until"] = now + 600  # Istirahat 10 menit
+                    print(f"[{get_ts()}] [{acc['config']['tag']}] 🛡️ Mode Aman: Kuota 18 aksi/jam tercapai. Istirahat 10 menit agar akun X tetap sehat.")
+                    continue
+
+                # 2. Batas maksimal Repost per jam (Maks 8 repost/jam)
+                if str(ttype).lower() in ["retweet", "repost"]:
+                    if now < acc.get("repost_cooldown_until", 0):
+                        continue
+                    reposts_last_hr = len([a for a in acc["recent_actions"] if a.get("type") in ["retweet", "repost"]])
+                    if reposts_last_hr >= acc.get("hourly_repost_cap", 8):
+                        acc["repost_cooldown_until"] = now + 1200  # Istirahat repost 20 menit
+                        print(f"[{get_ts()}] [{acc['config']['tag']}] 🛡️ Mode Aman: Batas 8 repost/jam tercapai. Istirahat repost 20 menit.")
+                        continue
+
+                # 3. Spasi antar Comment (Minimal 90 detik jeda antar komentar di akun yang sama)
+                if str(ttype).lower() in ["comment_twitter", "reply_x", "comment", "quote"]:
+                    if now - acc.get("last_comment_time", 0) < 90:
+                        continue
+
+                eligible_accs.append(acc)
             if not eligible_accs:
                 continue
 
