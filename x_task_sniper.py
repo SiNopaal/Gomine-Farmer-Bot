@@ -788,8 +788,8 @@ async def auto_join_telegram(phone: str, target_url: str) -> bool:
         return False
 
 async def execute_task_for_acc(idx: int, acc: dict, task: dict, r_data: dict, get_ts):
-    if idx > 0:
-        await asyncio.sleep(random.uniform(1.2, 2.0) * idx)  # Jeda gesit dan tertib antar akun
+    if not acc.get("is_aggressive") and idx > 0:
+        await asyncio.sleep(random.uniform(1.2, 2.0) * idx)  # Jeda gesit dan tertib antar akun pendamping
 
     tid = task.get("id")
     ttype = task.get("type")
@@ -1020,6 +1020,7 @@ async def run_sniper():
                 api.checkin()
                 api.enable_nsfw()
 
+                is_master = ("fannet" in tkey.lower() or "master" in cfg.get("name", "").lower() or phone == "+6281227121848")
                 accounts_state.append({
                     "config": cfg,
                     "phone": phone,
@@ -1036,8 +1037,9 @@ async def run_sniper():
                     "recent_actions": [],
                     "last_action_time": 0,
                     "last_comment_time": 0,
-                    "hourly_action_cap": 28,
-                    "hourly_repost_cap": 14
+                    "hourly_action_cap": 999999 if is_master else 28,
+                    "hourly_repost_cap": 999999 if is_master else 14,
+                    "is_aggressive": is_master
                 })
             else:
                 print(f"    ❌ Gagal ambil profil {phone}: {prof_res}")
@@ -1165,30 +1167,35 @@ async def run_sniper():
                 # Bersihkan riwayat aksi yang lebih lama dari 1 jam (sliding window 60 menit)
                 acc["recent_actions"] = [a for a in acc.get("recent_actions", []) if now - a["time"] < 3600]
 
-                # 1. Batas maksimal aksi total per jam (Sweet Spot: Maks 28 aksi/jam)
-                if len(acc["recent_actions"]) >= acc.get("hourly_action_cap", 28):
-                    acc["cooldown_until"] = now + 210  # Rehat singkat 3.5 menit
-                    print(f"[{get_ts()}] [{acc['config']['tag']}] 🛡️ Mode Aman: Kuota 28 aksi/jam tercapai. Rehat santai 3.5 menit agar akun X tetap sehat.")
-                    continue
-
-                # 2. Batas maksimal Repost per jam (Sweet Spot: Maks 14 repost/jam)
-                if str(ttype).lower() in ["retweet", "repost"]:
-                    if now < acc.get("repost_cooldown_until", 0):
-                        continue
-                    reposts_last_hr = len([a for a in acc["recent_actions"] if a.get("type") in ["retweet", "repost"]])
-                    if reposts_last_hr >= acc.get("hourly_repost_cap", 14):
-                        acc["repost_cooldown_until"] = now + 300  # Rehat repost 5 menit
-                        print(f"[{get_ts()}] [{acc['config']['tag']}] 🛡️ Mode Aman: Batas 14 repost/jam tercapai. Rehat repost 5 menit.")
+                if not acc.get("is_aggressive"):
+                    # 1. Batas maksimal aksi total per jam (Sweet Spot: Maks 28 aksi/jam)
+                    if len(acc["recent_actions"]) >= acc.get("hourly_action_cap", 28):
+                        acc["cooldown_until"] = now + 210  # Rehat singkat 3.5 menit
+                        print(f"[{get_ts()}] [{acc['config']['tag']}] 🛡️ Mode Aman: Kuota 28 aksi/jam tercapai. Rehat santai 3.5 menit agar akun X tetap sehat.")
                         continue
 
-                # 3. Spasi antar Comment (Minimal 45 detik jeda antar komentar di akun yang sama)
-                if str(ttype).lower() in ["comment_twitter", "reply_x", "comment", "quote"]:
-                    if now - acc.get("last_comment_time", 0) < 45:
-                        continue
+                    # 2. Batas maksimal Repost per jam (Sweet Spot: Maks 14 repost/jam)
+                    if str(ttype).lower() in ["retweet", "repost"]:
+                        if now < acc.get("repost_cooldown_until", 0):
+                            continue
+                        reposts_last_hr = len([a for a in acc["recent_actions"] if a.get("type") in ["retweet", "repost"]])
+                        if reposts_last_hr >= acc.get("hourly_repost_cap", 14):
+                            acc["repost_cooldown_until"] = now + 300  # Rehat repost 5 menit
+                            print(f"[{get_ts()}] [{acc['config']['tag']}] 🛡️ Mode Aman: Batas 14 repost/jam tercapai. Rehat repost 5 menit.")
+                            continue
+
+                    # 3. Spasi antar Comment (Minimal 45 detik jeda antar komentar di akun yang sama)
+                    if str(ttype).lower() in ["comment_twitter", "reply_x", "comment", "quote"]:
+                        if now - acc.get("last_comment_time", 0) < 45:
+                            continue
 
                 eligible_accs.append(acc)
+
             if not eligible_accs:
                 continue
+
+            # Prioritaskan akun agresif (Master) di urutan pertama (idx=0) untuk kunci slot instan
+            eligible_accs.sort(key=lambda a: 0 if a.get("is_aggressive") else 1)
 
             # ⚡ TEMBAK SNIPE MULTI-AKUN (HIGH-SPEED ULTRA-FAST 80ms)
             async def reserve_call(idx, acc):
