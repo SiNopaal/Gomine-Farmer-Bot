@@ -1,0 +1,16 @@
+[
+  {
+    "phone": "+6281234567890",
+    "twitter_key": "account1",
+    "name": "Account 1",
+    "tag": "👑 Master",
+    "completed_file": "completed_x_tasks.json"
+  },
+  {
+    "phone": "+6281234567891",
+    "twitter_key": "account2",
+    "name": "Account 2",
+    "tag": "💎 Acc2",
+    "completed_file": "completed_x_tasks_acc2.json"
+  }
+]

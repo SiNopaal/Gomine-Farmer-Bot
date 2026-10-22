@@ -1,0 +1,5 @@
+telethon>=1.36.0
+requests>=2.31.0
+curl_cffi>=0.7.0
+playwright>=1.49.0
+playwright-stealth>=1.0.6

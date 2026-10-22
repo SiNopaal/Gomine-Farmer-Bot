@@ -1,0 +1,41 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Telegram Sessions & Credentials (CRITICAL - DO NOT COMMIT)
+*.session
+*.session-journal
+*.zip
+sessions/
+Telegram Session/
+
+# Browser Profiles & Cookies
+browser_profile_*/
+cookies*.json
+accounts.json
+accounts_config.json
+config.json
+
+# Bot Runtime Cache & History
+completed_*.json
+farm_history.json
+cooldown_state.json
+working_proxies.json
+*.log
+*.png
+
+# OS & Editor Files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

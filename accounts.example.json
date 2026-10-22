@@ -1,0 +1,12 @@
+{
+  "accounts": {
+    "account1": {
+      "auth_token": "YOUR_TWITTER_AUTH_TOKEN",
+      "ct0": "YOUR_TWITTER_CT0"
+    },
+    "account2": {
+      "auth_token": "YOUR_TWITTER_AUTH_TOKEN_2",
+      "ct0": "YOUR_TWITTER_CT0_2"
+    }
+  }
+}
