@@ -18,6 +18,12 @@ ENV/
 sessions/
 Telegram Session/
 
+# Telegram Farmer Scripts (Kept Local Only)
+bot.py
+GoMine_Farmer_Colab.ipynb
+run.bat
+config*.json
+
 # Browser Profiles & Cookies
 browser_profile_*/
 cookies*.json

@@ -1,54 +1,57 @@
-# 🚜 GoMine Multi-Account Automation & X-Task Sniper Bot
+# 🎯 GoMine Multi-Account X-Task Auto-Sniper & Kuota Locker
 
-Bot otomatisasi canggih multi-akun untuk **GoMine Telegram Mini App** (`app.gomine.social`), dilengkapi dengan fitur **High-Speed Multi-Account X-Task Sniper** (Like, Repost, Follow, Comment) dengan sistem **Instant Slot Locking (80ms)**, TLS Fingerprint Chrome 124, dan Playwright Stealth.
+Bot auto-sniper berkecepatan tinggi multi-akun untuk menyelesaikan seluruh tugas sosial **X / Twitter** (Like, Repost, Follow, Comment/Reply) pada **GoMine Telegram Mini App** (`app.gomine.social`).
 
----
-
-## 🌟 Fitur Utama
-
-### 1. ⚡ High-Speed Multi-Account X-Task Sniper (`x_task_sniper.py`)
-* **Instant Slot Reservation (80ms Micro-Stagger)**: Mengunci kuota campaign baru dari advertiser GoMine serentak untuk seluruh akun dalam <0.25 detik sebelum kuota direbut bot global lain.
-* **Dual Execution Engine**:
-  * **Ultra-Fast Chrome TLS Path (`curl_cffi`)**: Eksekusi Like, Repost, dan Follow instan (<0.3s) menggunakan JA3/JA4 fingerprint Chrome 124 asli tanpa membuka browser.
-  * **Stealth Playwright Engine**: Eksekusi Comment/Reply dan Quote menggunakan browser Chrome dengan modul `playwright_stealth` anti-freeze.
-* **Auto Daily Retweet Limit Protection**: Mendeteksi batas limit harian Twitter/X (`error 344 / daily limit`) dan otomatis mengaktifkan cooldown istirahat 1 jam per akun.
-* **Smart Radar**: Polling radar adaptif 1.8 – 2.8 detik dengan rangkuman status saldo real-time.
-
-### 2. 🌾 Multi-Account Telegram Farmer (`bot.py`)
-* **Auto Daily Check-in**: Klaim bonus harian streak.
-* **Auto Mining Claim & Boost**: Otomatis klaim hasil tambang GOMINE dan upgrade level boost saat poin mencukupi.
-* **Auto Telegram Tasks**: Otomatis join channel/grup Telegram dan verifikasi reward.
-* **Auto Launch Campaign Tasks**: Verifikasi task web/miniapp partner.
-* **Anti-Ban Device Fingerprinting**: Setiap sesi Telegram disimulasikan menggunakan model perangkat Android unik (Pixel, Galaxy, Xiaomi, dll) agar terhindar dari deteksi multi-akun.
+Dilengkapi dengan sistem **Instant Slot Locking (80ms Micro-Stagger)**, **Dual Execution Engine (Chrome TLS + Playwright Stealth)**, serta proteksi keamanan akun X alami (*anti-ban & rate-limit auto-cooldown*).
 
 ---
 
-## 📁 Struktur Direktori
+## 🌟 Fitur Unggulan
+
+### 1. ⚡ High-Speed Slot Locking (80ms Micro-Stagger)
+* **Instant Kuota Reservation**: Mengunci kuota slot campaign baru dari advertiser dalam hitungan **<0.25 detik** serempak untuk seluruh akun terhubung sebelum direbut ribuan bot/user global lainnya.
+* **Smart Radar Loop**: Polling radar adaptif 1.8 – 2.8 detik untuk mendeteksi campaign baru secara instan.
+* **Auto Slot-Exhaustion Skip**: Melewati otomatis campaign kadaluarsa / kuota 0 tanpa pengulangan log yang memenuhi layar.
+
+### 2. 🚀 Dual Execution Engine
+* **Ultra-Fast Chrome TLS Path (`curl_cffi`)**:
+  * Meniru persis sidik jari browser (*JA3/JA4 TLS handshake*) Chrome 124.
+  * Mengeksekusi tugas **Like**, **Repost**, dan **Follow** instan (<0.3 detik) langsung ke API internal GraphQL X tanpa perlu merender browser berat.
+* **Stealth Playwright Engine (`playwright_stealth`)**:
+  * Mengeksekusi tugas **Comment / Reply**, **Quote**, dan **Bookmark** secara mulus.
+  * Kebal deteksi headless crawler dan anti-freeze pada antarmuka web X.
+
+### 3. 🛡️ Proteksi Anti-Ban & Auto-Cooldown
+* **Deteksi Limit Harian X (`Error 344`)**: Jika akun mendekati batas harian retweet dari Twitter/X, bot otomatis mengaktifkan masa istirahat (cooldown) 1 jam khusus untuk repost, dan tetap aktif untuk like/follow.
+* **Server Verify Cap Auto-Cooldown**: Membaca parameter cooldown resmi dari server GoMine (`verify_fail_cap`) jika limit verifikasi tercapai.
+* **Micro-Stagger Execution**: Jeda mikro alami antar-akun agar tidak terjadi tabrakan permintaan dari IP yang sama.
+
+---
+
+## 📁 Struktur Repositori
 
 ```text
-gomine-farmer-bot/
-├── bot.py                     # Telegram farming worker (Checkin, Claim, Boost, TG tasks)
-├── x_task_sniper.py           # Multi-account high-speed X/Twitter task sniper
-├── config.example.json        # Template konfigurasi bot farming
-├── accounts_config.example.json # Template multi-akun untuk sniper
-├── accounts.example.json      # Template cookie auth_token & ct0 Twitter
-├── run.bat                    # Script cepat menjalankan bot farming
-├── run_x_sniper.bat           # Script cepat menjalankan x_task_sniper
-├── requirements.txt           # Dependensi Python
-└── README.md                  # Dokumentasi panduan
+Gomine-Farmer-Bot/
+├── x_task_sniper.py             # Script utama X-Task Auto-Sniper
+├── accounts_config.example.json # Template konfigurasi daftar akun
+├── accounts.example.json        # Template kredensial cookies Twitter (auth_token & ct0)
+├── run_x_sniper.bat             # Script runner cepat untuk Windows
+├── requirements.txt             # Dependensi Python
+└── README.md                    # Dokumentasi lengkap
 ```
 
 ---
 
 ## ⚙️ Persyaratan Sistem
 
-* **Python 3.10+**
-* File sesi Telegram (`.session`) dari Telethon
-* Cookie akun X/Twitter (`auth_token` & `ct0`)
+* **Python 3.10 atau lebih baru**
+* Google Chrome terinstall di sistem
+* File sesi Telegram (`.session`) untuk masing-masing akun
+* Cookie login akun X (`auth_token` & `ct0`)
 
 ---
 
-## 🚀 Panduan Instalasi & Menjalankan
+## 🚀 Panduan Instalasi & Penggunaan
 
 ### 1. Clone Repositori
 ```bash
@@ -64,44 +67,56 @@ playwright install chromium
 
 ### 3. Konfigurasi Akun
 
-1. **Konfigurasi Farming (`config.json`)**:
-   Salin `config.example.json` menjadi `config.json`:
-   ```bash
-   cp config.example.json config.json
-   ```
-   Sesuaikan `main_account_phone` dan letak folder `telegram_session_dir`.
-
-2. **Konfigurasi Sniper Multi-Akun (`accounts_config.json`)**:
+1. **Konfigurasi Akun Sniper (`accounts_config.json`)**:
    Salin `accounts_config.example.json` menjadi `accounts_config.json`:
    ```bash
    cp accounts_config.example.json accounts_config.json
    ```
-   Isi nomor HP Telegram dan mapping `twitter_key` untuk masing-masing akun.
+   Isi nomor HP Telegram, tag, dan nama akun:
+   ```json
+   [
+     {
+       "phone": "+6281234567890",
+       "twitter_key": "account1",
+       "name": "Master",
+       "tag": "👑 Master",
+       "completed_file": "completed_x_tasks.json"
+     }
+   ]
+   ```
 
-3. **Konfigurasi Cookie Twitter (`accounts.json`)**:
+2. **Konfigurasi Cookie Twitter (`accounts.json`)**:
    Salin `accounts.example.json` menjadi `accounts.json`:
    ```bash
    cp accounts.example.json accounts.json
    ```
-   Masukkan `auth_token` dan `ct0` dari browser kamu (didapat dari DevTools -> Application -> Cookies -> `https://x.com`).
+   Masukkan `auth_token` dan `ct0` dari browser kamu:
+   ```json
+   {
+     "accounts": {
+       "account1": {
+         "auth_token": "YOUR_AUTH_TOKEN",
+         "ct0": "YOUR_CT0"
+       }
+     }
+   }
+   ```
+   *(Tips: Ambil nilai `auth_token` dan `ct0` dari menu Inspect Element (F12) -> Application -> Cookies -> https://x.com).*
+
+3. **Pastikan Sesi Telegram Tersedia**:
+   Pastikan file `.session` yang sesuai dengan nomor HP berada di folder sesi Telegram kamu.
 
 ---
 
 ## 🎮 Cara Menjalankan
 
-### Menjalankan X-Task Sniper (Rekomendasi untuk Cuan Cepat)
+Jalankan sniper menggunakan perintah:
 ```bash
 python x_task_sniper.py
 ```
-*atau klik dua kali file `run_x_sniper.bat` di Windows.*
-
-### Menjalankan Telegram Farmer (Daily Check-in & Mining)
-```bash
-python bot.py
-```
-*atau klik dua kali file `run.bat` di Windows.*
+*atau cukup klik dua kali pada file `run_x_sniper.bat` di Windows.*
 
 ---
 
 ## ⚠️ Disclaimer
-Script ini dibuat untuk tujuan edukasi dan automasi pribadi. Penggunaan script sepenuhnya merupakan tanggung jawab pengguna. Pastikan selalu menggunakan jeda yang wajar agar akun tetap aman.
+Proyek ini dibuat untuk tujuan riset, edukasi, dan automasi pribadi. Segala risiko penggunaan terhadap akun pengguna berada di bawah tanggung jawab masing-masing.
