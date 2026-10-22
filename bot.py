@@ -185,6 +185,9 @@ class GoMineAPI:
         except Exception as e:
             return {"status_code": 0, "ok": False, "error": str(e)}
 
+    def get_user_profile(self) -> Dict[str, Any]:
+        return self._call("GET", "/users/me")
+
     def init_user(self, username: str, first_name: str, ref_code: str) -> Dict[str, Any]:
         payload = {
             "username": username,
@@ -302,9 +305,12 @@ def run_account_cycle(session_path: str, is_main: bool, config: Dict[str, Any], 
     # 2. Init User / Bind Reff
     print(f"   🌐 [INIT] Sinkronisasi akun ke GoMine (Ref: {master_ref})...")
     
-    while True:
+    # Cek profil langsung jika sudah terdaftar
+    prof_res = api.get_user_profile()
+    if prof_res.get("ok") and isinstance(prof_res.get("data"), dict) and prof_res["data"].get("id"):
+        u_data = prof_res["data"]
+    else:
         init_res = api.init_user(username, first_name, master_ref)
-        
         if init_res["status_code"] == 429:
             detail = init_res.get("data", {}).get("detail", "Too many accounts from this network recently.")
             print(f"   ⚠️ [LIMIT IP] Server GoMine membatasi pendaftaran IP untuk {phone_name}: {detail}")
@@ -319,10 +325,7 @@ def run_account_cycle(session_path: str, is_main: bool, config: Dict[str, Any], 
             err_msg = init_res.get("data", {}).get("detail", init_res.get("error", "Init failed"))
             print(f"   ❌ [INIT_ERR] Gagal init: {err_msg}")
             return
-        else:
-            break
-
-    u_data = init_res["data"]
+        u_data = init_res["data"]
     uid = u_data.get("id")
     uname = u_data.get("username") or phone_name
     tier_name = u_data.get("access_tier_name", "Standard")
